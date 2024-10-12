@@ -12,9 +12,6 @@ import * as core from '@actions/core'
 import * as main from '../src/main'
 import path from 'node:path'
 
-// Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
-
 // Mock the GitHub Actions core library
 let debugMock: jest.SpiedFunction<typeof core.debug>
 let errorMock: jest.SpiedFunction<typeof core.error>
@@ -34,11 +31,10 @@ describe('action', () => {
   })
 
   it('local test', async () => {
-    // set environment
-    const testPluginsPath = path.join('.', '__tests__', 'testrepo')
-    process.env['GITHUB_WORKSPACE'] = testPluginsPath
-
-    await main.run()
+    await main.generateManifest({
+      addonsPath: path.resolve(__dirname, 'testrepo/addons'),
+      manifestPath: undefined
+    })
 
     expect(setFailedMock).not.toHaveBeenCalled()
     // expect(errorMock).not.toHaveBeenCalled()
