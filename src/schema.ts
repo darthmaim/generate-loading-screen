@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import { errorMap } from 'zod-validation-error'
+
+z.setErrorMap(errorMap)
 
 // TODO: can this be removed?
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

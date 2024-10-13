@@ -37603,6 +37603,299 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 9936:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// lib/index.ts
+var lib_exports = {};
+__export(lib_exports, {
+  ValidationError: () => ValidationError,
+  createMessageBuilder: () => createMessageBuilder,
+  errorMap: () => errorMap,
+  fromError: () => fromError,
+  fromZodError: () => fromZodError,
+  fromZodIssue: () => fromZodIssue,
+  isValidationError: () => isValidationError,
+  isValidationErrorLike: () => isValidationErrorLike,
+  isZodErrorLike: () => isZodErrorLike,
+  toValidationError: () => toValidationError
+});
+module.exports = __toCommonJS(lib_exports);
+
+// lib/isZodErrorLike.ts
+function isZodErrorLike(err) {
+  return err instanceof Error && err.name === "ZodError" && "issues" in err && Array.isArray(err.issues);
+}
+
+// lib/ValidationError.ts
+var ValidationError = class extends Error {
+  name;
+  details;
+  constructor(message, options) {
+    super(message, options);
+    this.name = "ZodValidationError";
+    this.details = getIssuesFromErrorOptions(options);
+  }
+  toString() {
+    return this.message;
+  }
+};
+function getIssuesFromErrorOptions(options) {
+  if (options) {
+    const cause = options.cause;
+    if (isZodErrorLike(cause)) {
+      return cause.issues;
+    }
+  }
+  return [];
+}
+
+// lib/isValidationError.ts
+function isValidationError(err) {
+  return err instanceof ValidationError;
+}
+
+// lib/isValidationErrorLike.ts
+function isValidationErrorLike(err) {
+  return err instanceof Error && err.name === "ZodValidationError";
+}
+
+// lib/fromZodIssue.ts
+var zod2 = __toESM(__nccwpck_require__(3301));
+
+// lib/MessageBuilder.ts
+var zod = __toESM(__nccwpck_require__(3301));
+
+// lib/utils/NonEmptyArray.ts
+function isNonEmptyArray(value) {
+  return value.length !== 0;
+}
+
+// lib/utils/joinPath.ts
+var identifierRegex = /[$_\p{ID_Start}][$\u200c\u200d\p{ID_Continue}]*/u;
+function joinPath(path) {
+  if (path.length === 1) {
+    return path[0].toString();
+  }
+  return path.reduce((acc, item) => {
+    if (typeof item === "number") {
+      return acc + "[" + item.toString() + "]";
+    }
+    if (item.includes('"')) {
+      return acc + '["' + escapeQuotes(item) + '"]';
+    }
+    if (!identifierRegex.test(item)) {
+      return acc + '["' + item + '"]';
+    }
+    const separator = acc.length === 0 ? "" : ".";
+    return acc + separator + item;
+  }, "");
+}
+function escapeQuotes(str) {
+  return str.replace(/"/g, '\\"');
+}
+
+// lib/config.ts
+var ISSUE_SEPARATOR = "; ";
+var MAX_ISSUES_IN_MESSAGE = 99;
+var PREFIX = "Validation error";
+var PREFIX_SEPARATOR = ": ";
+var UNION_SEPARATOR = ", or ";
+
+// lib/MessageBuilder.ts
+function createMessageBuilder(props = {}) {
+  const {
+    issueSeparator = ISSUE_SEPARATOR,
+    unionSeparator = UNION_SEPARATOR,
+    prefixSeparator = PREFIX_SEPARATOR,
+    prefix = PREFIX,
+    includePath = true,
+    maxIssuesInMessage = MAX_ISSUES_IN_MESSAGE
+  } = props;
+  return (issues) => {
+    const message = issues.slice(0, maxIssuesInMessage).map(
+      (issue) => getMessageFromZodIssue({
+        issue,
+        issueSeparator,
+        unionSeparator,
+        includePath
+      })
+    ).join(issueSeparator);
+    return prefixMessage(message, prefix, prefixSeparator);
+  };
+}
+function getMessageFromZodIssue(props) {
+  const { issue, issueSeparator, unionSeparator, includePath } = props;
+  if (issue.code === zod.ZodIssueCode.invalid_union) {
+    return issue.unionErrors.reduce((acc, zodError) => {
+      const newIssues = zodError.issues.map(
+        (issue2) => getMessageFromZodIssue({
+          issue: issue2,
+          issueSeparator,
+          unionSeparator,
+          includePath
+        })
+      ).join(issueSeparator);
+      if (!acc.includes(newIssues)) {
+        acc.push(newIssues);
+      }
+      return acc;
+    }, []).join(unionSeparator);
+  }
+  if (issue.code === zod.ZodIssueCode.invalid_arguments) {
+    return [
+      issue.message,
+      ...issue.argumentsError.issues.map(
+        (issue2) => getMessageFromZodIssue({
+          issue: issue2,
+          issueSeparator,
+          unionSeparator,
+          includePath
+        })
+      )
+    ].join(issueSeparator);
+  }
+  if (issue.code === zod.ZodIssueCode.invalid_return_type) {
+    return [
+      issue.message,
+      ...issue.returnTypeError.issues.map(
+        (issue2) => getMessageFromZodIssue({
+          issue: issue2,
+          issueSeparator,
+          unionSeparator,
+          includePath
+        })
+      )
+    ].join(issueSeparator);
+  }
+  if (includePath && isNonEmptyArray(issue.path)) {
+    if (issue.path.length === 1) {
+      const identifier = issue.path[0];
+      if (typeof identifier === "number") {
+        return `${issue.message} at index ${identifier}`;
+      }
+    }
+    return `${issue.message} at "${joinPath(issue.path)}"`;
+  }
+  return issue.message;
+}
+function prefixMessage(message, prefix, prefixSeparator) {
+  if (prefix !== null) {
+    if (message.length > 0) {
+      return [prefix, message].join(prefixSeparator);
+    }
+    return prefix;
+  }
+  if (message.length > 0) {
+    return message;
+  }
+  return PREFIX;
+}
+
+// lib/fromZodIssue.ts
+function fromZodIssue(issue, options = {}) {
+  const messageBuilder = createMessageBuilderFromOptions(options);
+  const message = messageBuilder([issue]);
+  return new ValidationError(message, { cause: new zod2.ZodError([issue]) });
+}
+function createMessageBuilderFromOptions(options) {
+  if ("messageBuilder" in options) {
+    return options.messageBuilder;
+  }
+  return createMessageBuilder(options);
+}
+
+// lib/errorMap.ts
+var errorMap = (issue, ctx) => {
+  const error = fromZodIssue({
+    ...issue,
+    // fallback to the default error message
+    // when issue does not have a message
+    message: issue.message ?? ctx.defaultError
+  });
+  return {
+    message: error.message
+  };
+};
+
+// lib/fromZodError.ts
+function fromZodError(zodError, options = {}) {
+  if (!isZodErrorLike(zodError)) {
+    throw new TypeError(
+      `Invalid zodError param; expected instance of ZodError. Did you mean to use the "${fromError.name}" method instead?`
+    );
+  }
+  return fromZodErrorWithoutRuntimeCheck(zodError, options);
+}
+function fromZodErrorWithoutRuntimeCheck(zodError, options = {}) {
+  const zodIssues = zodError.errors;
+  let message;
+  if (isNonEmptyArray(zodIssues)) {
+    const messageBuilder = createMessageBuilderFromOptions2(options);
+    message = messageBuilder(zodIssues);
+  } else {
+    message = zodError.message;
+  }
+  return new ValidationError(message, { cause: zodError });
+}
+function createMessageBuilderFromOptions2(options) {
+  if ("messageBuilder" in options) {
+    return options.messageBuilder;
+  }
+  return createMessageBuilder(options);
+}
+
+// lib/toValidationError.ts
+var toValidationError = (options = {}) => (err) => {
+  if (isZodErrorLike(err)) {
+    return fromZodErrorWithoutRuntimeCheck(err, options);
+  }
+  if (err instanceof Error) {
+    return new ValidationError(err.message, { cause: err });
+  }
+  return new ValidationError("Unknown error");
+};
+
+// lib/fromError.ts
+function fromError(err, options = {}) {
+  return toValidationError(options)(err);
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
 /***/ 9892:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -42134,6 +42427,7 @@ const standalone_1 = __nccwpck_require__(811);
 const fs = __importStar(__nccwpck_require__(7561));
 const toml = __importStar(__nccwpck_require__(4920));
 const node_path_1 = __importDefault(__nccwpck_require__(9411));
+const zod_validation_error_1 = __nccwpck_require__(9936);
 function addAddonName(addon, name) {
     if (addon.addon_names === undefined) {
         addon.addon_names = [name];
@@ -42184,11 +42478,35 @@ async function generateManifest({ addonsPath, manifestPath }) {
     }
     // list of addons
     const addons = [];
+    // flag if a validation error was encountered while reading addon configs
+    let encounteredValidationError = false;
     // collect addons from addon directory
-    for (const addonToml of fs.readdirSync(addonsPath)) {
-        const tomlFile = fs.readFileSync(node_path_1.default.join(addonsPath, addonToml));
-        const config = schema_1.plugin.parse(toml.parse(tomlFile.toString()));
-        addons.push(config);
+    for (const fileName of fs.readdirSync(addonsPath)) {
+        const filePath = node_path_1.default.join(addonsPath, fileName);
+        const tomlContent = fs.readFileSync(filePath);
+        try {
+            const config = schema_1.plugin.parse(toml.parse(tomlContent.toString()));
+            addons.push(config);
+        }
+        catch (error) {
+            if ((0, zod_validation_error_1.isZodErrorLike)(error)) {
+                // flag that we encountered a validation error so we can fail later
+                // we don't instantly fail so we can validate all addons first
+                encounteredValidationError = true;
+                for (const validationError of error.errors) {
+                    core.error(validationError.message, { file: filePath });
+                    console.error(`${fileName}: ${validationError.message}`);
+                }
+            }
+            else {
+                // if this was not just a validation error, rethrow the error
+                throw error;
+            }
+        }
+    }
+    // if any addon failed validation, we don't continue
+    if (encounteredValidationError) {
+        throw Error('Validation of some addons failed');
     }
     // check if manifest already exists, then merge addon definitions
     if (manifestPath && !fs.existsSync(manifestPath)) {
@@ -42392,6 +42710,8 @@ exports.createReleaseFromDll = createReleaseFromDll;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.plugin = void 0;
 const zod_1 = __nccwpck_require__(3301);
+const zod_validation_error_1 = __nccwpck_require__(9936);
+zod_1.z.setErrorMap(zod_validation_error_1.errorMap);
 // TODO: can this be removed?
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const downloadType = zod_1.z.enum(['archive', 'dll']);
