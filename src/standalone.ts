@@ -1,12 +1,10 @@
 import {
   createReleaseFromArchive,
   createReleaseFromDll,
-  isGreater,
-  Plugin,
-  Release,
-  StandaloneHost
+  isGreater
 } from './plugin'
 import { addAddonName } from './main'
+import { Plugin, Release, StandaloneHost } from './schema'
 
 export async function updateStandalone(
   plugin: Plugin,

@@ -4,77 +4,7 @@ import { tmpdir } from 'os'
 import path from 'node:path'
 import * as fs from 'node:fs'
 import { exec } from 'child_process'
-
-export enum DownloadType {
-  Archive = 'archive',
-  Dll = 'dll'
-}
-
-export enum InstallMode {
-  Gw2Load = 'gw2load',
-  Arc = 'arc'
-}
-
-export type Version = [number, number, number, number]
-
-export type Release = {
-  id: string
-  name: string
-  version: Version
-  version_str: string
-  download_url: string
-  asset_index?: number
-}
-
-export type Package = {
-  id: string
-  name: string
-  description: string
-  tooltip: string
-  website: string
-  developer: string
-  issue_tracker?: string
-  vcs?: string
-
-  dependencies?: string[]
-  optional_dependencies?: string[]
-  conflicts?: string[]
-}
-
-// export enum HostType {
-//   Github = 'github',
-//   Standalone = 'standalone'
-// }
-// export type HostType = 'github' | 'standalone'
-
-export interface GithubHost {
-  url: string
-}
-
-export interface StandaloneHost {
-  url: string
-  version_url: string
-  prerelease_url?: string
-  prerelease_version_url: string
-}
-
-type Host = { github: GithubHost } | { standalone: StandaloneHost }
-
-export type Installation = {
-  mode: InstallMode
-}
-
-export type Plugin = {
-  package: Package
-
-  host: Host
-
-  installation: Installation
-
-  release?: Release
-  prerelease?: Release
-  addon_names?: string[]
-}
+import { Plugin, Release, Version } from './schema'
 
 export function isGreater(a: Version, b: Version): boolean {
   for (let i = 0; i < 4; i++) {

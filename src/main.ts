@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { Plugin } from './plugin'
+import { plugin, Plugin } from './schema'
 import { updateFromGithub } from './github'
 import { updateStandalone } from './standalone'
 import * as fs from 'node:fs'
@@ -71,8 +71,8 @@ export async function generateManifest({
   // collect addons from addon directory
   for (const addonToml of fs.readdirSync(addonsPath)) {
     const tomlFile = fs.readFileSync(path.join(addonsPath, addonToml))
-    // TODO: validate schema
-    const config: Plugin = toml.parse(tomlFile.toString())
+    const config = plugin.parse(toml.parse(tomlFile.toString()))
+
     addons.push(config)
   }
 

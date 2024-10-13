@@ -1,15 +1,13 @@
 import {
   createReleaseFromArchive,
   createReleaseFromDll,
-  GithubHost,
-  isGreater,
-  Plugin,
-  Release
+  isGreater
 } from './plugin'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import { addAddonName } from './main'
 import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types'
+import { GithubHost, Plugin, Release } from './schema'
 
 type GetLatestReleaseType = GetResponseDataTypeFromEndpointMethod<
   typeof octokit.rest.repos.getLatestRelease
