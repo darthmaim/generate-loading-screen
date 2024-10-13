@@ -59,7 +59,7 @@ const installation = z.object({
   mode: installMode
 })
 
-export const plugin = z.object({
+export const addon = z.object({
   package: pkg,
   host,
   installation,
@@ -67,4 +67,4 @@ export const plugin = z.object({
   prerelease: release.optional(),
   addon_names: z.array(z.string()).optional()
 })
-export type Plugin = z.infer<typeof plugin>
+export type Addon = z.infer<typeof addon>

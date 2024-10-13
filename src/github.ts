@@ -7,7 +7,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import { addAddonName } from './main'
 import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types'
-import { GithubHost, Plugin, Release } from './schema'
+import { GithubHost, Addon, Release } from './schema'
 
 type GetLatestReleaseType = GetResponseDataTypeFromEndpointMethod<
   typeof octokit.rest.repos.getLatestRelease
@@ -23,7 +23,7 @@ if (token === '' && envToken !== undefined) {
 const octokit = github.getOctokit(token)
 
 export async function updateFromGithub(
-  plugin: Plugin,
+  plugin: Addon,
   host: GithubHost
 ): Promise<void> {
   const [owner, repo] = host.url.split('/')
@@ -70,7 +70,7 @@ export async function updateFromGithub(
  * @throws Error when no valid release asset was found
  */
 async function findAndCreateRelease(
-  plugin: Plugin,
+  plugin: Addon,
   oldRelease: Release | undefined,
   githubRelease: GetLatestReleaseType
 ): Promise<Release | undefined> {
@@ -99,7 +99,7 @@ async function findAndCreateRelease(
 }
 
 async function downloadFromGithub(
-  plugin: Plugin,
+  plugin: Addon,
   asset: GetLatestReleaseAssetType
 ): Promise<Release | undefined> {
   const file = await fetch(asset.browser_download_url)

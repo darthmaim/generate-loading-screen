@@ -4,10 +4,10 @@ import {
   isGreater
 } from './plugin'
 import { addAddonName } from './main'
-import { Plugin, Release, StandaloneHost } from './schema'
+import { Addon, Release, StandaloneHost } from './schema'
 
 export async function updateStandalone(
-  plugin: Plugin,
+  plugin: Addon,
   host: StandaloneHost
 ): Promise<void> {
   if (!host.version_url) {
@@ -44,7 +44,7 @@ export async function updateStandalone(
 }
 
 async function downloadAndCheckVersion(
-  plugin: Plugin,
+  plugin: Addon,
   oldRelease: Release | undefined,
   version_url: string,
   host_url: string
@@ -76,7 +76,7 @@ async function downloadAndCheckVersion(
 }
 
 async function downloadStandalone(
-  plugin: Plugin,
+  plugin: Addon,
   host_url: string,
   id: string
 ): Promise<Release | undefined> {

@@ -4,7 +4,7 @@ import { tmpdir } from 'os'
 import path from 'node:path'
 import * as fs from 'node:fs'
 import { exec } from 'child_process'
-import { Plugin, Release, Version } from './schema'
+import { Addon, Release, Version } from './schema'
 
 export function isGreater(a: Version, b: Version): boolean {
   for (let i = 0; i < 4; i++) {
@@ -16,7 +16,7 @@ export function isGreater(a: Version, b: Version): boolean {
 }
 
 export async function createReleaseFromArchive(
-  plugin: Plugin,
+  plugin: Addon,
   fileBuffer: ArrayBuffer,
   id: string,
   downloadUrl: string
@@ -68,7 +68,7 @@ function checkDllExports(filepath: string): boolean {
 }
 
 export function createReleaseFromDll(
-  plugin: Plugin,
+  plugin: Addon,
   fileBuffer: ArrayBuffer,
   id: string,
   downloadUrl: string

@@ -42485,7 +42485,7 @@ async function generateManifest({ addonsPath, manifestPath }) {
         const filePath = node_path_1.default.join(addonsPath, fileName);
         const tomlContent = fs.readFileSync(filePath);
         try {
-            const config = schema_1.plugin.parse(toml.parse(tomlContent.toString()));
+            const config = schema_1.addon.parse(toml.parse(tomlContent.toString()));
             addons.push(config);
         }
         catch (error) {
@@ -42708,7 +42708,7 @@ exports.createReleaseFromDll = createReleaseFromDll;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.plugin = void 0;
+exports.addon = void 0;
 const zod_1 = __nccwpck_require__(3301);
 const zod_validation_error_1 = __nccwpck_require__(9936);
 zod_1.z.setErrorMap(zod_validation_error_1.errorMap);
@@ -42754,7 +42754,7 @@ const host = zod_1.z.union([
 const installation = zod_1.z.object({
     mode: installMode
 });
-exports.plugin = zod_1.z.object({
+exports.addon = zod_1.z.object({
     package: pkg,
     host,
     installation,

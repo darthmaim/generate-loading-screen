@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { plugin, Plugin } from './schema'
+import { addon as addonSchema, Addon } from './schema'
 import { updateFromGithub } from './github'
 import { updateStandalone } from './standalone'
 import * as fs from 'node:fs'
@@ -7,7 +7,7 @@ import * as toml from 'toml'
 import path from 'node:path'
 import { isZodErrorLike } from 'zod-validation-error'
 
-export function addAddonName(addon: Plugin, name: string): void {
+export function addAddonName(addon: Addon, name: string): void {
   if (addon.addon_names === undefined) {
     addon.addon_names = [name]
   } else {
@@ -17,7 +17,7 @@ export function addAddonName(addon: Plugin, name: string): void {
   }
 }
 
-async function update(addon: Plugin): Promise<void> {
+async function update(addon: Addon): Promise<void> {
   if ('github' in addon.host) {
     await updateFromGithub(addon, addon.host.github)
   } else if ('standalone' in addon.host) {
@@ -67,7 +67,7 @@ export async function generateManifest({
   }
 
   // list of addons
-  const addons: Plugin[] = []
+  const addons: Addon[] = []
 
   // flag if a validation error was encountered while reading addon configs
   let encounteredValidationError = false
@@ -78,7 +78,7 @@ export async function generateManifest({
     const tomlContent = fs.readFileSync(filePath)
 
     try {
-      const config = plugin.parse(toml.parse(tomlContent.toString()))
+      const config = addonSchema.parse(toml.parse(tomlContent.toString()))
       addons.push(config)
     } catch (error) {
       if (isZodErrorLike(error)) {
@@ -104,7 +104,7 @@ export async function generateManifest({
 
   // check if manifest already exists, then merge addon definitions
   if (manifestPath && !fs.existsSync(manifestPath)) {
-    const existingManifest: Plugin[] = JSON.parse(
+    const existingManifest: Addon[] = JSON.parse(
       fs.readFileSync(manifestPath, 'utf8')
     )
 
