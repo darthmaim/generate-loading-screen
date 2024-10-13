@@ -32,9 +32,9 @@ const pkg = z.object({
   issue_tracker: z.string().optional(),
   vcs: z.string().optional(),
 
-  dependencies: z.array(z.string()),
-  optional_dependencies: z.array(z.string()),
-  conflicts: z.array(z.string())
+  dependencies: z.array(z.string()).optional(),
+  optional_dependencies: z.array(z.string()).optional(),
+  conflicts: z.array(z.string()).optional()
 })
 
 const githubHost = z.object({
@@ -46,8 +46,7 @@ const standaloneHost = z.object({
   url: z.string(),
   version_url: z.string(),
   prerelease_url: z.string().optional(),
-  // TODO: should this be optional?
-  prerelease_version_url: z.string()
+  prerelease_version_url: z.string().optional()
 })
 export type StandaloneHost = z.infer<typeof standaloneHost>
 

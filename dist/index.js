@@ -42734,9 +42734,9 @@ const pkg = zod_1.z.object({
     developer: zod_1.z.string(),
     issue_tracker: zod_1.z.string().optional(),
     vcs: zod_1.z.string().optional(),
-    dependencies: zod_1.z.array(zod_1.z.string()),
-    optional_dependencies: zod_1.z.array(zod_1.z.string()),
-    conflicts: zod_1.z.array(zod_1.z.string())
+    dependencies: zod_1.z.array(zod_1.z.string()).optional(),
+    optional_dependencies: zod_1.z.array(zod_1.z.string()).optional(),
+    conflicts: zod_1.z.array(zod_1.z.string()).optional()
 });
 const githubHost = zod_1.z.object({
     url: zod_1.z.string()
@@ -42745,8 +42745,7 @@ const standaloneHost = zod_1.z.object({
     url: zod_1.z.string(),
     version_url: zod_1.z.string(),
     prerelease_url: zod_1.z.string().optional(),
-    // TODO: should this be optional?
-    prerelease_version_url: zod_1.z.string()
+    prerelease_version_url: zod_1.z.string().optional()
 });
 const host = zod_1.z.union([
     zod_1.z.object({ github: githubHost }),
