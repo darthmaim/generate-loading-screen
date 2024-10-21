@@ -77,7 +77,7 @@ export async function generateManifest({
   }
 
   // check if manifest already exists, then merge addon definitions
-  if (manifestPath && !fs.existsSync(manifestPath)) {
+  if (manifestPath && fs.existsSync(manifestPath)) {
     const existingManifest: Plugin[] = JSON.parse(
       fs.readFileSync(manifestPath, 'utf8')
     )
@@ -112,10 +112,17 @@ export async function generateManifest({
     }
   }
 
+  const manifest = {
+    version: 1,
+    data: {
+      addons
+    }
+  }
+
   // output manifest
   if (manifestPath) {
-    fs.writeFileSync(manifestPath, JSON.stringify(addons))
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest))
   } else {
-    console.log(JSON.stringify(addons, null, 2))
+    console.log(JSON.stringify(manifest, null, 2))
   }
 }

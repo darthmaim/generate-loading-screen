@@ -37827,7 +37827,7 @@ async function generateManifest({ addonsPath, manifestPath }) {
         addons.push(config);
     }
     // check if manifest already exists, then merge addon definitions
-    if (manifestPath && !fs.existsSync(manifestPath)) {
+    if (manifestPath && fs.existsSync(manifestPath)) {
         const existingManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
         for (const existingAddon of existingManifest) {
             const found = addons.find(value => value.package.id === existingAddon.package.id);
@@ -37852,12 +37852,18 @@ async function generateManifest({ addonsPath, manifestPath }) {
             console.log(message);
         }
     }
+    const manifest = {
+        version: 1,
+        data: {
+            addons
+        }
+    };
     // output manifest
     if (manifestPath) {
-        fs.writeFileSync(manifestPath, JSON.stringify(addons));
+        fs.writeFileSync(manifestPath, JSON.stringify(manifest));
     }
     else {
-        console.log(JSON.stringify(addons, null, 2));
+        console.log(JSON.stringify(manifest, null, 2));
     }
 }
 exports.generateManifest = generateManifest;
