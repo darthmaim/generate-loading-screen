@@ -1,0 +1,33 @@
+name: Dependabot Bundle
+on: pull_request
+
+permissions: {}
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    if:
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.commits == 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPENDABOT_BUNDLE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Bundle dist
+        run: npm run bundle
+
+      - name: Commit dist
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '[dependabot skip] Bundle dist'
