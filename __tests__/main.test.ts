@@ -15,6 +15,7 @@ import path from 'node:path'
 // Mock the GitHub Actions core library
 let debugMock: jest.SpiedFunction<typeof core.debug>
 let errorMock: jest.SpiedFunction<typeof core.error>
+let warningMock: jest.SpiedFunction<typeof core.warning>
 let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
@@ -25,18 +26,57 @@ describe('action', () => {
 
     debugMock = jest.spyOn(core, 'debug').mockImplementation()
     errorMock = jest.spyOn(core, 'error').mockImplementation()
+    warningMock = jest.spyOn(core, 'warning').mockImplementation()
     getInputMock = jest.spyOn(core, 'getInput')
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
     setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
   })
 
   it('local test', async () => {
-    await main.generateManifest({
-      addonsPath: path.resolve(__dirname, 'testrepo/addons'),
+    const manifest = await main.generateManifest({
+      addonsPath: path.resolve(__dirname, 'addons'),
       manifestPath: undefined
     })
 
+    expect(manifest.data.addons).toHaveLength(4)
     expect(setFailedMock).not.toHaveBeenCalled()
-    // expect(errorMock).not.toHaveBeenCalled()
   }, 20_000)
+
+  it('should merge (legacy array) manifest', async () => {
+    const manifest = await main.generateManifest({
+      addonsPath: path.resolve(__dirname, 'empty'),
+      manifestPath: path.resolve(__dirname, 'manifest-array.json')
+    })
+
+    expect(manifest.data.addons).toHaveLength(0)
+    expect(warningMock).toHaveBeenCalledWith(
+      'Addon gw2radial was removed from manifest!'
+    )
+    expect(setFailedMock).not.toHaveBeenCalled()
+  })
+
+  it('should merge manifest', async () => {
+    const manifest = await main.generateManifest({
+      addonsPath: path.resolve(__dirname, 'empty'),
+      manifestPath: path.resolve(__dirname, 'manifest.json')
+    })
+
+    expect(manifest.data.addons).toHaveLength(0)
+    expect(warningMock).toHaveBeenCalledWith(
+      'Addon gw2radial was removed from manifest!'
+    )
+    expect(setFailedMock).not.toHaveBeenCalled()
+  })
+
+  it('should fail if manifest is invalid', async () => {
+    const manifestPromise = main.generateManifest({
+      addonsPath: path.resolve(__dirname, 'empty'),
+      manifestPath: path.resolve(__dirname, 'invalid.json')
+    })
+
+    await expect(manifestPromise).rejects.toHaveProperty(
+      'message',
+      'Invalid manifest'
+    )
+  })
 })

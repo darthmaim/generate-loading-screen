@@ -58,4 +58,4 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          addons_path: __tests__/testrepo/addons
+          addons_path: __tests__/addons

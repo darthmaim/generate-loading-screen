@@ -1,0 +1,22 @@
+[
+  {
+    "package": {
+      "id": "gw2radial",
+      "name": "GW2 Radial",
+      "description": "An ArenaNET-approved addon to show a convenient, customizable radial menu overlay to select a mount, novelty item and more, on the fly.",
+      "tooltip": "Provides a menu with access to all unlocked mounts with one keypress",
+      "website": "https://github.com/Friendly0Fire/GW2Radial",
+      "developer": "FriendlyFire",
+      "issue_tracker": "https://github.com/Friendly0Fire/GW2Radial/issues",
+      "vcs": "https://github.com/Friendly0Fire/GW2Radial"
+    },
+    "host": {
+      "github": {
+        "url": "Friendly0Fire/gw2radial"
+      }
+    },
+    "installation": {
+      "mode": "gw2load"
+    }
+  }
+]

@@ -1,11 +1,17 @@
 import * as core from '@actions/core'
-import { addon as addonSchema, Addon } from './schema'
+import {
+  addon as addonSchema,
+  Addon,
+  manifest as manifestSchema,
+  Manifest
+} from './schema'
 import { updateFromGithub } from './github'
 import { updateStandalone } from './standalone'
 import * as fs from 'node:fs'
 import * as toml from 'toml'
 import path from 'node:path'
 import { isZodErrorLike } from 'zod-validation-error'
+import { z } from 'zod'
 
 export function addAddonName(addon: Addon, name: string): void {
   if (addon.addon_names === undefined) {
@@ -37,7 +43,13 @@ export async function run(): Promise<void> {
     const manifestPath =
       manifestPathInput !== '' ? path.resolve(manifestPathInput) : undefined
 
-    await generateManifest({ addonsPath, manifestPath })
+    const manifest = await generateManifest({ addonsPath, manifestPath })
+
+    if (manifestPath) {
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest))
+    } else {
+      console.log(JSON.stringify(manifest, null, 2))
+    }
   } catch (error) {
     // Fail the workflow run if an error occurs
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -52,7 +64,7 @@ export async function generateManifest({
 }: {
   addonsPath: string
   manifestPath: string | undefined
-}): Promise<void> {
+}): Promise<Manifest> {
   // make sure addons directory exists
   if (!fs.existsSync(addonsPath)) {
     throw new Error(`Addon directory does not exist: ${addonsPath}`)
@@ -74,6 +86,11 @@ export async function generateManifest({
 
   // collect addons from addon directory
   for (const fileName of fs.readdirSync(addonsPath)) {
+    // skip files that don't end with .toml
+    if (!fileName.endsWith('.toml')) {
+      continue
+    }
+
     const filePath = path.join(addonsPath, fileName)
     const tomlContent = fs.readFileSync(filePath)
 
@@ -104,11 +121,9 @@ export async function generateManifest({
 
   // check if manifest already exists, then merge addon definitions
   if (manifestPath && fs.existsSync(manifestPath)) {
-    const existingManifest: Addon[] = JSON.parse(
-      fs.readFileSync(manifestPath, 'utf8')
-    )
+    const existingAddons = await readManifest(manifestPath)
 
-    for (const existingAddon of existingManifest) {
+    for (const existingAddon of existingAddons) {
       const found = addons.find(
         value => value.package.id === existingAddon.package.id
       )
@@ -138,10 +153,37 @@ export async function generateManifest({
     }
   }
 
-  // output manifest
-  if (manifestPath) {
-    fs.writeFileSync(manifestPath, JSON.stringify(addons))
-  } else {
-    console.log(JSON.stringify(addons, null, 2))
+  const manifest: Manifest = {
+    version: 1,
+    data: {
+      addons
+    }
   }
+
+  return manifest
+}
+
+async function readManifest(manifestPath: string): Promise<Addon[]> {
+  const manifestJson: unknown = JSON.parse(
+    fs.readFileSync(manifestPath, 'utf8')
+  )
+
+  // manifest has to be an object (arrays are objects too)
+  if (typeof manifestJson !== 'object' || !manifestJson) {
+    throw new Error('Invalid manifest')
+  }
+
+  if (Array.isArray(manifestJson)) {
+    // if the manifest is just an array, try to parse as array of addons
+    return z.array(addonSchema).parse(manifestJson)
+  }
+
+  if ('version' in manifestJson) {
+    // if the manifest has a version, we can parse it
+    const manifest = manifestSchema.parse(manifestJson)
+    return manifest.data.addons
+  }
+
+  // the manifest was neither an array nor had it version set
+  throw new Error('Invalid manifest')
 }

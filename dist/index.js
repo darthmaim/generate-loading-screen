@@ -42428,6 +42428,7 @@ const fs = __importStar(__nccwpck_require__(7561));
 const toml = __importStar(__nccwpck_require__(4920));
 const node_path_1 = __importDefault(__nccwpck_require__(9411));
 const zod_validation_error_1 = __nccwpck_require__(9936);
+const zod_1 = __nccwpck_require__(3301);
 function addAddonName(addon, name) {
     if (addon.addon_names === undefined) {
         addon.addon_names = [name];
@@ -42456,7 +42457,13 @@ async function run() {
         // get manifest path
         const manifestPathInput = core.getInput('manifest_path');
         const manifestPath = manifestPathInput !== '' ? node_path_1.default.resolve(manifestPathInput) : undefined;
-        await generateManifest({ addonsPath, manifestPath });
+        const manifest = await generateManifest({ addonsPath, manifestPath });
+        if (manifestPath) {
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+        }
+        else {
+            console.log(JSON.stringify(manifest, null, 2));
+        }
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -42482,6 +42489,10 @@ async function generateManifest({ addonsPath, manifestPath }) {
     let encounteredValidationError = false;
     // collect addons from addon directory
     for (const fileName of fs.readdirSync(addonsPath)) {
+        // skip files that don't end with .toml
+        if (!fileName.endsWith('.toml')) {
+            continue;
+        }
         const filePath = node_path_1.default.join(addonsPath, fileName);
         const tomlContent = fs.readFileSync(filePath);
         try {
@@ -42510,8 +42521,8 @@ async function generateManifest({ addonsPath, manifestPath }) {
     }
     // check if manifest already exists, then merge addon definitions
     if (manifestPath && fs.existsSync(manifestPath)) {
-        const existingManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        for (const existingAddon of existingManifest) {
+        const existingAddons = await readManifest(manifestPath);
+        for (const existingAddon of existingAddons) {
             const found = addons.find(value => value.package.id === existingAddon.package.id);
             if (!found) {
                 core.warning(`Addon ${existingAddon.package.id} was removed from manifest!`);
@@ -42534,15 +42545,33 @@ async function generateManifest({ addonsPath, manifestPath }) {
             console.log(message);
         }
     }
-    // output manifest
-    if (manifestPath) {
-        fs.writeFileSync(manifestPath, JSON.stringify(addons));
-    }
-    else {
-        console.log(JSON.stringify(addons, null, 2));
-    }
+    const manifest = {
+        version: 1,
+        data: {
+            addons
+        }
+    };
+    return manifest;
 }
 exports.generateManifest = generateManifest;
+async function readManifest(manifestPath) {
+    const manifestJson = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    // manifest has to be an object (arrays are objects too)
+    if (typeof manifestJson !== 'object' || !manifestJson) {
+        throw new Error('Invalid manifest');
+    }
+    if (Array.isArray(manifestJson)) {
+        // if the manifest is just an array, try to parse as array of addons
+        return zod_1.z.array(schema_1.addon).parse(manifestJson);
+    }
+    if ('version' in manifestJson) {
+        // if the manifest has a version, we can parse it
+        const manifest = schema_1.manifest.parse(manifestJson);
+        return manifest.data.addons;
+    }
+    // the manifest was neither an array nor had it version set
+    throw new Error('Invalid manifest');
+}
 
 
 /***/ }),
@@ -42708,7 +42737,7 @@ exports.createReleaseFromDll = createReleaseFromDll;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.addon = void 0;
+exports.manifest = exports.addon = void 0;
 const zod_1 = __nccwpck_require__(3301);
 const zod_validation_error_1 = __nccwpck_require__(9936);
 zod_1.z.setErrorMap(zod_validation_error_1.errorMap);
@@ -42761,6 +42790,12 @@ exports.addon = zod_1.z.object({
     release: release.optional(),
     prerelease: release.optional(),
     addon_names: zod_1.z.array(zod_1.z.string()).optional()
+});
+exports.manifest = zod_1.z.object({
+    version: zod_1.z.literal(1),
+    data: zod_1.z.object({
+        addons: zod_1.z.array(exports.addon)
+    })
 });
 
 

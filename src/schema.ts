@@ -68,3 +68,11 @@ export const addon = z.object({
   addon_names: z.array(z.string()).optional()
 })
 export type Addon = z.infer<typeof addon>
+
+export const manifest = z.object({
+  version: z.literal(1),
+  data: z.object({
+    addons: z.array(addon)
+  })
+})
+export type Manifest = z.infer<typeof manifest>
